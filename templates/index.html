@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>כתב מתמטי</title>
+
+<style>
+    body {
+        font-family: "Comic Sans MS", Arial;
+        background: linear-gradient(#aee6ff, #ffffff);
+        padding: 20px;
+        text-align: center;
+    }
+
+    h1 {
+        color: #ff8c00;
+        font-size: 40px;
+        text-shadow: 2px 2px #fff;
+    }
+
+    #board {
+        width: 600px;
+        min-height: 450px;
+        background: #fff8d6;
+        border: 5px solid #ffcc5c;
+        border-radius: 25px;
+        padding: 20px;
+        margin: 30px auto;
+        box-shadow: 0 0 20px rgba(0,0,0,0.15);
+        position: relative;
+    }
+
+    /* שמש */
+    .sun {
+        width: 80px;
+        height: 80px;
+        background: #ffeb3b;
+        border-radius: 50%;
+        position: absolute;
+        top: -40px;
+        left: -40px;
+        box-shadow: 0 0 20px #ffeb3b;
+    }
+
+    /* ענן */
+    .cloud {
+        width: 120px;
+        height: 60px;
+        background: #ffffff;
+        border-radius: 50px;
+        position: absolute;
+        top: -30px;
+        right: -20px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    #preview {
+        max-width: 90%;
+        max-height: 250px;
+        border-radius: 15px;
+        margin-top: 10px;
+        border: 3px dashed #ffcc5c;
+        background: #fff;
+    }
+
+    #responseBox {
+        background: #dfffd8;
+        padding: 15px;
+        border-radius: 15px;
+        margin-top: 15px;
+        font-size: 18px;
+        border: 2px solid #8bc34a;
+        white-space: pre-wrap;
+    }
+
+    button {
+        background: #ff8c00;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        font-size: 20px;
+        border-radius: 15px;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #ff7000;
+        transform: scale(1.05);
+    }
+
+    input[type="file"] {
+        font-size: 18px;
+        margin: 10px;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>מזהה כתב יד</h1>
+
+<input type="file" id="imageInput" accept="image/*"><br>
+
+<button id="sendBtn">שלח למודל ✈️</button>
+
+<div id="board">
+    <div class="sun"></div>
+    <div class="cloud"></div>
+
+    <h2>התמונה שלך:</h2>
+    <img id="preview" src="" alt="">
+
+    <div id="responseBox"></div>
+</div>
+
+<script>
+    const imageInput = document.getElementById("imageInput");
+const preview = document.getElementById("preview");
+const sendBtn = document.getElementById("sendBtn");
+const responseBox = document.getElementById("responseBox");
+
+let selectedFile = null;
+
+console.log("loading");
+
+
+imageInput.addEventListener("change", () => {
+    selectedFile = imageInput.files[0];
+    if (!selectedFile) {
+        alert("invalid image")
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => preview.src = e.target.result;
+    reader.readAsDataURL(selectedFile);
+});
+
+sendBtn.addEventListener("click", async () => {
+    if (!selectedFile) {
+        console.error("לא נבחרה תמונה");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+    console.log("sending picture")
+    responseBox.innerHTML = "שולח לשרת...";
+
+    try {
+        const res = await fetch("/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+        responseBox.innerHTML = "תשובת השרת:\n" + JSON.stringify(data, null, 2);
+
+    } catch (err) {
+        responseBox.innerHTML = "שגיאה בשליחה לשרת";
+        console.error(err);
+    }
+});
+</script>
+
+</body>
+</html>
